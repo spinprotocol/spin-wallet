@@ -1,0 +1,37 @@
+{
+  "name": "spin-wallet",
+  "version": "1.0.0",
+  "description": "Wallet module for spin-protocol projects",
+  "main": "index.js",
+  "scripts": {
+    "build": "browserify ./index.js -t babelify -o dist/bundle.js -v",
+    "build-min": "browserify ./index.js -t babelify -o dist/bundle.js -v && jsmin -o dist/bundle.min.js dist/bundle.js",
+    "test": "mocha ./test/wallet.test.js --timeout 20000"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/runtime": "^7.2.0",
+    "axios": "^0.18.0",
+    "browser-passworder": "^2.0.3",
+    "eth-keyring-controller": "^3.3.1",
+    "ethers": "^4.0.15",
+    "localforage": "^1.7.3",
+    "lodash.find": "^4.6.0",
+    "lodash.remove": "^4.7.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.0",
+    "@babel/plugin-transform-async-to-generator": "^7.2.0",
+    "@babel/plugin-transform-runtime": "^7.2.0",
+    "@babel/polyfill": "^7.0.0",
+    "@babel/preset-env": "^7.2.0",
+    "atob": "^2.1.2",
+    "babelify": "^10.0.0",
+    "btoa": "^1.2.1",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "chai-bignumber": "^3.0.0",
+    "mocha": "^5.2.0"
+  }
+}
