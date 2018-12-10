@@ -1,7 +1,3 @@
-// global.btoa = require('btoa');
-// global.atob = require('atob');
-
-
 const bytes = require('ethers/utils/bytes');
 const hash = require('ethers/utils/hash');
 const hdnode = require('ethers/utils/hdnode');

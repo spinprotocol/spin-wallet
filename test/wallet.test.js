@@ -1,5 +1,5 @@
 const Utils = require('ethers').utils;
-const SpinWallet = require('./mockWallet');
+const SpinWalletApi = require('./mockWallet');
 require('chai')
   .use(require('chai-bignumber')(Utils.BigNumber))
   .use(require('chai-as-promised'))
@@ -11,6 +11,7 @@ const expect = require('chai')
   .expect;
 
 
+const testnetMemonics = '<mnemonics for testnet>';
 const password = '_test_';
 const passwordAlt = '_test_1_';
 const testMessage = 'This is a test message';
@@ -29,15 +30,15 @@ const fakeToken = {
   decimals: 6
 }
 
-describe('SpinWalletApi', () => {
+describe('SpinWalletApiApi', () => {
   let myWallet;
 
   beforeEach(() => {
-    myWallet = SpinWallet.createWallet();
+    myWallet = SpinWalletApi.createWallet();
   });
 
   it('can create a new wallet', () => {
-    let newWallet = SpinWallet.createWallet();
+    let newWallet = SpinWalletApi.createWallet();
     let primaryAddress = newWallet.getAddress();
     // Check if the address is a valid Ethereum address
     Utils.getAddress(primaryAddress);
@@ -47,7 +48,7 @@ describe('SpinWalletApi', () => {
     let privateKey = myWallet.getPrivateKey();
     let primaryAddress = myWallet.getAddress();
 
-    let restoredWallet = SpinWallet.restoreWalletFromPrivateKey(privateKey);
+    let restoredWallet = SpinWalletApi.restoreWalletFromPrivateKey(privateKey);
 
     restoredWallet.getAddress().should.be.equal(primaryAddress);
     restoredWallet.getPrivateKey().should.be.equal(privateKey);
@@ -58,7 +59,7 @@ describe('SpinWalletApi', () => {
     let privateKey = myWallet.getPrivateKey();
     let primaryAddress = myWallet.getAddress();
 
-    let restoredWallet = SpinWallet.restoreWalletFromMnemonics(mnemonics);
+    let restoredWallet = SpinWalletApi.restoreWalletFromMnemonics(mnemonics);
 
     restoredWallet.getAddress().should.be.equal(primaryAddress);
     restoredWallet.getPrivateKey().should.be.equal(privateKey);
@@ -66,8 +67,8 @@ describe('SpinWalletApi', () => {
 
   it('can connect to a network', () => {
     myWallet.connect('rinkeby');
-    myWallet.provider.should.not.be.undefined;
-    myWallet.provider.should.not.be.null;
+    myWallet.getProvider().should.not.be.undefined;
+    myWallet.getProvider().should.not.be.null;
   });
 
   it('can lock and unlock the wallet', async () => {
@@ -76,13 +77,13 @@ describe('SpinWalletApi', () => {
 
     await myWallet.lock(password).should.be.fulfilled;
 
-    myWallet.isLocked.should.be.true;
+    myWallet.isLocked().should.be.true;
     expect(myWallet.getMnemonics).to.throw();
     expect(myWallet.getPrivateKey).to.throw();
     
     await myWallet.unlock(password).should.be.fulfilled;
 
-    myWallet.isLocked.should.be.false;
+    myWallet.isLocked().should.be.false;
     myWallet.getMnemonics().should.be.equal(mnemonics);
     myWallet.getPrivateKey().should.be.equal(privateKey);
   });
@@ -90,11 +91,12 @@ describe('SpinWalletApi', () => {
   it('does not allow to do any operation when it is locked', async () => {
     await myWallet.lock(password).should.be.fulfilled;
 
+    myWallet.isLocked().should.be.true;
     expect(myWallet.connect.bind(myWallet.connect, 'rinkeby')).to.throw();
-    await myWallet.getEtherBalance().should.be.rejected;
-    await myWallet.getTokenBalance().should.be.rejected;
     expect(myWallet.addToken).to.throw();
     expect(myWallet.removeToken).to.throw();
+    await myWallet.getEtherBalance().should.be.rejected;
+    await myWallet.getTokenBalance().should.be.rejected;
     await myWallet.sendEther().should.be.rejected;
     await myWallet.sendToken().should.be.rejected;
     await myWallet.sign(testTx).should.be.rejected;
@@ -121,7 +123,7 @@ describe('SpinWalletApi', () => {
   it('does not allow to unlock the wallet with a wrong password', async () => {
     await myWallet.lock(password).should.be.fulfilled;
 
-    myWallet.isLocked.should.be.true;
+    myWallet.isLocked().should.be.true;
     expect(myWallet.getMnemonics).to.throw();
     expect(myWallet.getPrivateKey).to.throw();
     
@@ -130,9 +132,9 @@ describe('SpinWalletApi', () => {
 
   it('can save and retrieve the locked wallet to/from the storage', async () => {
     let encryptedWallet = await myWallet.lock(password).should.be.fulfilled;
-    await SpinWallet.saveVault(encryptedWallet).should.be.fulfilled;
+    await SpinWalletApi.saveVault(encryptedWallet).should.be.fulfilled;
 
-    let retrievedWallet = await SpinWallet.retrieveVault().should.be.fulfilled;
+    let retrievedWallet = await SpinWalletApi.retrieveVault().should.be.fulfilled;
 
     retrievedWallet.should.be.equal(encryptedWallet);
   });
@@ -141,42 +143,34 @@ describe('SpinWalletApi', () => {
     let mnemonics = myWallet.getMnemonics();
     let privateKey = myWallet.getPrivateKey();
     let encryptedWallet = await myWallet.lock(password).should.be.fulfilled;
-    await SpinWallet.saveVault(encryptedWallet).should.be.fulfilled;
+    await SpinWalletApi.saveVault(encryptedWallet).should.be.fulfilled;
 
-    let vault = await SpinWallet.retrieveVault().should.be.fulfilled;
-    let wallet = await SpinWallet.restoreWalletFromVault(vault, password).should.be.fulfilled;
+    let vault = await SpinWalletApi.retrieveVault().should.be.fulfilled;
+    let wallet = await SpinWalletApi.restoreWalletFromVault(vault, password).should.be.fulfilled;
 
-    wallet.isLocked.should.be.false;
+    wallet.isLocked().should.be.false;
     wallet.getMnemonics().should.be.equal(mnemonics);
     wallet.getPrivateKey().should.be.equal(privateKey);
   });
+
+  // These are real transactions on rinkeby
+  it('can send ether', async () => {
+    let wallet = SpinWalletApi.restoreWalletFromMnemonics(testnetMemonics);
+    wallet.connect('rinkeby');
+    let receipt = await wallet.sendEther('0xb38951160Db9FF7A33e3e901Fa53569B13525946', '0.001').should.be.fulfilled;
+    console.log(receipt);
+    receipt.status.should.be.equal(1);
+  });
+
+  it('can send token', async () => {
+    let wallet = SpinWalletApi.restoreWalletFromMnemonics(testnetMemonics);
+    wallet.connect('rinkeby');
+    let receipt = await wallet.sendToken(
+      '0x668D6D1a5be72dC477C630DE38aaEDc895e5019C', 
+      '0xb38951160Db9FF7A33e3e901Fa53569B13525946', 
+      5000
+    ).should.be.fulfilled;
+    console.log(receipt);
+    receipt.status.should.be.equal(1);
+  });
 });
-
-// let wallet = SpinWallet.restoreWalletFromMnemonics('timber carbon better crop motion thumb remind any reject hungry giggle shift');
-
-// wallet.connect('rinkeby');
-// wallet.sendToken('0x668D6D1a5be72dC477C630DE38aaEDc895e5019C', '0xb38951160Db9FF7A33e3e901Fa53569B13525946', 5000)
-//   .then(tx => console.log('Token Tx: ', tx))
-//   .catch(console.log);
-
-// wallet.lock('test1')
-//   .then(jsonWallet => {
-//     console.log('Encrypted wallet:', jsonWallet)
-//     return SpinWallet.saveVault(jsonWallet)
-//   })
-//   .then(res => console.log('Wallet saved,', wallet))
-//   .catch(console.log)
-
-// SpinWallet.retrieveVault()
-//   .then(jsonWallet => {
-//     return SpinWallet.restoreWalletFromVault(jsonWallet, 'test')
-//   })
-//   .then(wallet => {
-//     console.log('Wallet unlocked,', wallet)
-
-//     wallet.connect('rinkeby');
-//     wallet.sendEther('0xb38951160Db9FF7A33e3e901Fa53569B13525946', '0.2')
-//       .then(tx => console.log('Ether Tx: ', tx))
-//       .catch(console.log);
-//   })
-//   .catch(console.log)

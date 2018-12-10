@@ -6,7 +6,7 @@
   "scripts": {
     "build": "browserify ./index.js -t babelify -o dist/bundle.js -v",
     "build-min": "browserify ./index.js -t babelify -o dist/bundle.js -v && jsmin -o dist/bundle.min.js dist/bundle.js",
-    "test": "mocha ./test/wallet.test.js --timeout 20000"
+    "test": "gulp mock-wallet && mocha ./test/wallet.test.js --timeout 60000"
   },
   "author": "",
   "license": "ISC",
@@ -32,6 +32,9 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "chai-bignumber": "^3.0.0",
+    "gulp": "^3.9.1",
+    "gulp-rename": "^1.4.0",
+    "gulp-replace": "^1.0.0",
     "mocha": "^5.2.0"
   }
 }

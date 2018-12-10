@@ -2,7 +2,7 @@ const ethers = require('ethers');
 const _find = require('lodash.find');
 const _remove = require('lodash.remove');
 const localforage = require('localforage');
-const Wallet = ethers.Wallet; // require('./wallet');
+const Wallet = ethers.Wallet;
 
 const ERC20_ABI = [
   'function balanceOf(address owner) view returns (uint)',
@@ -12,22 +12,21 @@ const ERC20_ABI = [
 const VAULT_NAME = '__spin_vault__';
 
 
-class SpinWallet {
-  /**
-   * @param {Wallet} wallet
-   * @param {string} [encryptedJsonWallet] 
-   */
-  constructor(wallet, encryptedJsonWallet) {
-    this.wallet = null;
-    this.isLocked = true;
-    this.tokens = [];
-    this.provider = null;
-    this.network = '';
-    this.encryptedJsonWallet = encryptedJsonWallet || '';
-    this._initWallet(wallet);
+function SpinWallet(wallet, encryptedJsonWallet) {
+  if (!(this instanceof SpinWallet)) {
+    console.log('Creating with new operator...');
+    return new SpinWallet(wallet, encryptedJsonWallet);
   }
 
-  _initWallet(wallet) {
+  this.wallet = null;
+  this.isLocked = true;
+  this.tokens = [];
+  this.provider = null;
+  this.network = '';
+  this.encryptedJsonWallet = encryptedJsonWallet || '';
+  initWallet.call(this, wallet);
+
+  function initWallet(wallet) {
     if (!wallet || !(wallet instanceof ethers.Signer)) {
       throw new Error('Wallet cannot be empty! Wallet should be an instance of ethers.Signer!');
     }
@@ -41,7 +40,7 @@ class SpinWallet {
    * 
    * @param {string} [network='homestead'] Network name
    */
-  connect(network='homestead') {
+  function connect(network='homestead') {
     if (!this.wallet) {
       throw new Error('Wallet is null! You cannot connect to the network without a wallet!');
     }
@@ -50,7 +49,9 @@ class SpinWallet {
     this.network = network;
     this.wallet = this.wallet.connect(this.provider);
 
-    this.addToken('SPIN', '0x668D6D1a5be72dC477C630DE38aaEDc895e5019C', 18);
+    // Add SPIN Token by default
+    // FIXME: Token information should be replaced with the correct ones
+    addToken.call(this, 'SPIN', '0x668D6D1a5be72dC477C630DE38aaEDc895e5019C', 18);
   }
 
   /**
@@ -60,7 +61,7 @@ class SpinWallet {
    * @param {string} password
    * @return {Promise<string>} Resolves with the encrypted wallet in json string
    */
-  async lock(password, cb) {
+  async function lock(password, cb) {
     // Encrypt the wallet if there is no encrypted wallet
     if (!this.encryptedJsonWallet) {
       let encryptedWallet = await this.wallet.encrypt(password, {}, cb);
@@ -80,16 +81,23 @@ class SpinWallet {
    * 
    * @param {string} password
    */
-  async unlock(password, cb) {
+  async function unlock(password, cb) {
     let wallet = await Wallet.fromEncryptedJson(this.encryptedJsonWallet, password, cb);
-    this._initWallet(wallet);
+    initWallet.call(this, wallet);
     return true;
+  }
+
+  /**
+   * @returns {boolean} Whether this wallet is locked or not
+   */
+  function isLocked() {
+    return this.isLocked;
   }
 
   /**
    * @returns {string} 12-word mnemonic sentence of this wallet
    */
-  getMnemonics() {
+  function getMnemonics() {
     if (this.isLocked) {
       throw new Error('Wallet is locked!');
     }
@@ -100,7 +108,7 @@ class SpinWallet {
   /**
    * @returns {string} Private key of this wallet
    */
-  getPrivateKey() {
+  function getPrivateKey() {
     if (this.isLocked) {
       throw new Error('Wallet is locked!');
     }
@@ -111,7 +119,7 @@ class SpinWallet {
   /**
    * @returns {string} Primary public address of this wallet
    */
-  getAddress() {
+  function getAddress() {
     if (this.isLocked) {
       throw new Error('Wallet is locked!');
     }
@@ -120,9 +128,23 @@ class SpinWallet {
   }
 
   /**
+   * @returns {string} Connected network's name
+   */
+  function getNetwork() {
+    return this.network;
+  }
+
+  /**
+   * @returns {object} RPC provider
+   */
+  function getProvider() {
+    return this.provider;
+  }
+
+  /**
    * @returns {Promise<string>} Resolves with the ether balance of this wallet's primary address
    */
-  async getEtherBalance() {
+  async function getEtherBalance() {
     if (this.isLocked) {
       return Promise.reject(new Error('Wallet is locked!'));
     }
@@ -139,7 +161,7 @@ class SpinWallet {
    * @param {number|string} decimals Decimal unit of the token to be added
    * @throws Throws an error if this wallet is not connected to any network
    */
-  addToken(symbol, address, decimals) {
+  function addToken(symbol, address, decimals) {
     if (this.isLocked) {
       throw new Error('Wallet is locked!');
     }
@@ -164,7 +186,7 @@ class SpinWallet {
    * 
    * @param {string} address Address of the token contract
    */
-  removeToken(address) {
+  function removeToken(address) {
     if (this.isLocked) {
       throw new Error('Wallet is locked!');
     }
@@ -179,7 +201,7 @@ class SpinWallet {
    * @param {string} tokenAddress Address of the token contract
    * @returns {Promise<number|string>} Resolves with the corresponding token balance of this wallet's primary address
    */
-  async getTokenBalance(tokenAddress) {
+  async function getTokenBalance(tokenAddress) {
     if (this.isLocked) {
       return Promise.reject(new Error('Wallet is locked!'));
     }
@@ -199,14 +221,15 @@ class SpinWallet {
    * @param {string|number} amount 
    * @returns Resolves with the transaction receipt
    */
-  sendEther(to, amount) {
+  async function sendEther(to, amount) {
     if (this.isLocked) {
       return Promise.reject(new Error('Wallet is locked!'));
     }
 
     ethers.utils.getAddress(to);
     let value = ethers.utils.parseEther(amount);
-    return this.wallet.sendTransaction({to, value});
+    let tx = await this.wallet.sendTransaction({to, value});
+    return (await tx.wait());
   }
 
   /**
@@ -214,7 +237,7 @@ class SpinWallet {
    * @param {string|number} amount 
    * @returns Resolves with the transaction receipt once the tx is mined
    */
-  async sendToken(tokenAddress, to, amount) {
+  async function sendToken(tokenAddress, to, amount) {
     if (this.isLocked) {
       return Promise.reject(new Error('Wallet is locked!'));
     }
@@ -248,7 +271,7 @@ class SpinWallet {
    * @param {{to:string,nonce:number,gasLimit:number,gasPrice:number,data:string,value:number,chainId:number}} tx
    * @returns {Promise<string>} Resolves with the tx signature
    */
-  sign(tx) {
+  function sign(tx) {
     if (this.isLocked) {
       return Promise.reject(new Error('Wallet is locked!'));
     }
@@ -261,12 +284,32 @@ class SpinWallet {
    * @param {string} message 
    * @returns {Promise<string>} Resolves with the message signature
    */
-  signMessage(message) {
+  function signMessage(message) {
     if (this.isLocked) {
       return Promise.reject(new Error('Wallet is locked!'));
     }
     return this.wallet.signMessage(message);
   }
+
+  return Object.freeze({
+    connect: connect.bind(this),
+    lock: lock.bind(this),
+    unlock: unlock.bind(this),
+    isLocked: isLocked.bind(this),
+    getMnemonics: getMnemonics.bind(this),
+    getPrivateKey: getPrivateKey.bind(this),
+    getAddress: getAddress.bind(this),
+    getNetwork: getNetwork.bind(this),
+    getProvider: getProvider.bind(this),
+    getEtherBalance: getEtherBalance.bind(this),
+    getTokenBalance: getTokenBalance.bind(this),
+    addToken: addToken.bind(this),
+    removeToken: removeToken.bind(this),
+    sendEther: sendEther.bind(this),
+    sendToken: sendToken.bind(this),
+    sign: sign.bind(this),
+    signMessage: signMessage.bind(this)
+  });
 }
 
 function createERC20TokenContract(signer, address) {
@@ -279,6 +322,7 @@ function createERC20TokenContract(signer, address) {
 
 /**
  * Creates BIP44 compliant HD wallet.
+ * @returns {SpinWallet}
  */
 function createWallet() {
   return new SpinWallet(Wallet.createRandom());
@@ -288,6 +332,7 @@ function createWallet() {
  * Restores BIP44 compliant HD wallet from 12-word mnemonic sentence (BIP39).
  * 
  * @param {string} mnemonics 12-word mnemonic sentence
+ * @returns {SpinWallet}
  */
 function restoreWalletFromMnemonics(mnemonics) {
   return new SpinWallet(Wallet.fromMnemonic(mnemonics));
@@ -297,6 +342,7 @@ function restoreWalletFromMnemonics(mnemonics) {
  * Restores BIP44 compliant HD wallet from private key.
  * 
  * @param {string} privateKey Private key in the form of hex string (32-byte)
+ * @returns {SpinWallet}
  */
 function restoreWalletFromPrivateKey(privateKey) {
   return new SpinWallet(new Wallet(privateKey));
@@ -309,6 +355,7 @@ function restoreWalletFromPrivateKey(privateKey) {
  * @param {string} vault Private key in the form of hex string (32-byte)
  * @param {string} password Password to decrypt the encrypted json wallet
  * @param {function} [cb] Callback function called with the progress ratio in every second
+ * @returns {SpinWallet}
  */
 async function restoreWalletFromVault(vault, password, cb) {
   let wallet = await Wallet.fromEncryptedJson(vault, password, cb);
