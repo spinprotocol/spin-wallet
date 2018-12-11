@@ -22,6 +22,7 @@ const localforage = Object.freeze((function() {
   };
 })());
 const Wallet = ethers.Wallet;
+const NetworkStatsApi = require('../api/networkStatsApi');
 
 const ERC20_ABI = [
   'function balanceOf(address owner) view returns (uint)',
@@ -33,7 +34,6 @@ const VAULT_NAME = '__spin_vault__';
 
 function SpinWallet(wallet, encryptedJsonWallet) {
   if (!(this instanceof SpinWallet)) {
-    console.log('Creating with new operator...');
     return new SpinWallet(wallet, encryptedJsonWallet);
   }
 
@@ -245,9 +245,17 @@ function SpinWallet(wallet, encryptedJsonWallet) {
       return Promise.reject(new Error('Wallet is locked!'));
     }
 
-    ethers.utils.getAddress(to);
+    // Validate recipient address
+    try {
+      ethers.utils.getAddress(to)
+    } catch (e) {
+      return Promise.reject(new Error('Invalid Ethereum address!'));
+    }
+
+    let { average } = await NetworkStatsApi.getGasPriceStats();
+
     let value = ethers.utils.parseEther(amount);
-    let tx = await this.wallet.sendTransaction({to, value});
+    let tx = await this.wallet.sendTransaction({to, value, gasPrice: average});
     return (await tx.wait());
   }
 
@@ -274,10 +282,12 @@ function SpinWallet(wallet, encryptedJsonWallet) {
       return Promise.reject(new Error('Invalid Ethereum address!'));
     }
 
+    let { average } = await NetworkStatsApi.getGasPriceStats();
+
     amount = new ethers.utils.BigNumber(amount);
     amount = amount.mul(token.oneToken).toString(10);
 
-    let tx = await token.contract.transfer(to, amount);
+    let tx = await token.contract.transfer(to, amount, {gasPrice: average});
 
     return (await tx.wait());
   }

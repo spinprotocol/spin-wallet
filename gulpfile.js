@@ -4,17 +4,25 @@ const replace = require('gulp-replace');
 const fs = require('fs');
 
 
+/**
+ * Replaces localForage module with a mocked one
+ * so that unit tests can be done. Also arranges
+ * module paths accordingly.
+ */
 gulp.task('mock-wallet', function() {
   let src = './index.js';
   let dest = './test';
   let fileReplacement = './test/mockedLocalForage.js';
   let replacedFile = 'mockWallet.js'
 
-  let search = 'const localforage = require(\'localforage\');';
-  let replacement = fs.readFileSync(fileReplacement).toString();
+  let search1 = 'const localforage = require(\'localforage\');';
+  let replacement1 = fs.readFileSync(fileReplacement).toString();
+  let search2 = 'const NetworkStatsApi = require(\'./api/networkStatsApi\');';
+  let replacement2 = 'const NetworkStatsApi = require(\'../api/networkStatsApi\');';
  
   return gulp.src(src)
-    .pipe(replace(search, replacement))
+    .pipe(replace(search1, replacement1))
+    .pipe(replace(search2, replacement2))
     .pipe(rename(replacedFile))
     .pipe(gulp.dest(dest));
 });

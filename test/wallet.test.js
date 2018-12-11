@@ -11,7 +11,11 @@ const expect = require('chai')
   .expect;
 
 
-const testnetMemonics = '<mnemonics for testnet>';
+const testnetMemonics = '<mnemonics for testnet>';  // Replace with your own testing account's mnemonics
+const receiverAddress = '0xb38951160Db9FF7A33e3e901Fa53569B13525946'; // Feel free to change this address to any ethereum address you want
+const tokenAddress = '0x668D6D1a5be72dC477C630DE38aaEDc895e5019C';  // SPIN Token rinkeby deployment
+const sendEtherAmount = '0.001';
+const sendTokenAmount = '10';
 const password = '_test_';
 const passwordAlt = '_test_1_';
 const testMessage = 'This is a test message';
@@ -97,8 +101,8 @@ describe('SpinWalletApiApi', () => {
     expect(myWallet.removeToken).to.throw();
     await myWallet.getEtherBalance().should.be.rejected;
     await myWallet.getTokenBalance().should.be.rejected;
-    await myWallet.sendEther().should.be.rejected;
-    await myWallet.sendToken().should.be.rejected;
+    await myWallet.sendEther(receiverAddress, sendEtherAmount).should.be.rejected;
+    await myWallet.sendToken(tokenAddress, receiverAddress, sendTokenAmount).should.be.rejected;
     await myWallet.sign(testTx).should.be.rejected;
     await myWallet.signMessage(testMessage).should.be.rejected;
   });
@@ -153,24 +157,18 @@ describe('SpinWalletApiApi', () => {
     wallet.getPrivateKey().should.be.equal(privateKey);
   });
 
-  // These are real transactions on rinkeby
+  // These are real transactions on rinkeby testnet
   it('can send ether', async () => {
     let wallet = SpinWalletApi.restoreWalletFromMnemonics(testnetMemonics);
     wallet.connect('rinkeby');
-    let receipt = await wallet.sendEther('0xb38951160Db9FF7A33e3e901Fa53569B13525946', '0.001').should.be.fulfilled;
-    console.log(receipt);
-    receipt.status.should.be.equal(1);
+    let { status } = await wallet.sendEther(receiverAddress, sendEtherAmount).should.be.fulfilled;
+    status.should.be.equal(1);
   });
 
   it('can send token', async () => {
     let wallet = SpinWalletApi.restoreWalletFromMnemonics(testnetMemonics);
     wallet.connect('rinkeby');
-    let receipt = await wallet.sendToken(
-      '0x668D6D1a5be72dC477C630DE38aaEDc895e5019C', 
-      '0xb38951160Db9FF7A33e3e901Fa53569B13525946', 
-      5000
-    ).should.be.fulfilled;
-    console.log(receipt);
-    receipt.status.should.be.equal(1);
+    let { status } = await wallet.sendToken(tokenAddress, receiverAddress, sendTokenAmount).should.be.fulfilled;
+    status.should.be.equal(1);
   });
 });
