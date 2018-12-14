@@ -4,34 +4,64 @@ const _remove = require('lodash.remove');
 const localforage = require('localforage');
 const Wallet = ethers.Wallet;
 const NetworkStatsApi = require('./api/networkStatsApi');
-
-const ERC20_ABI = [
-  'function balanceOf(address owner) view returns (uint)',
-  'function transfer(address to, uint256 amount)',
-  'event Transfer(address indexed from, address indexed to, uint256 amount)'
-];
 const VAULT_NAME = '__spin_vault__';
 
 
 function SpinWallet(wallet, encryptedJsonWallet) {
+  // Force user to use `new` keyword
   if (!(this instanceof SpinWallet)) {
     return new SpinWallet(wallet, encryptedJsonWallet);
   }
 
+  /**
+   * @private
+   */
+  const ERC20_ABI = [
+    'function balanceOf(address owner) view returns (uint)',
+    'function transfer(address to, uint256 amount)',
+    'event Transfer(address indexed from, address indexed to, uint256 amount)'
+  ];
+
+  /**
+   * @private
+   */
+  const SPIN_TOKEN_ADDRESS = process.env.TOKEN_ADDRESS;
+
+  /**
+   * @private
+   */
   this.wallet = null;
   this.isLocked = true;
   this.tokens = [];
   this.provider = null;
   this.network = '';
   this.encryptedJsonWallet = encryptedJsonWallet || '';
-  initWallet.call(this, wallet);
 
-  function initWallet(wallet) {
-    if (!wallet || !(wallet instanceof ethers.Signer)) {
-      throw new Error('Wallet cannot be empty! Wallet should be an instance of ethers.Signer!');
+  _initWallet.call(this, wallet);
+
+  /**
+   * @private
+   * @param {ethers.Signer} signer
+   */
+  function _initWallet(signer) {
+    if (!signer || !(signer instanceof ethers.Signer)) {
+      throw new Error('Signer cannot be empty! Signer should be an instance of ethers.Signer!');
     }
-    this.wallet = wallet;
+    this.wallet = signer;
     this.isLocked = false;
+  }
+
+  /**
+   * @private
+   * @param {ethers.Wallet} signer
+   * @param {string} address
+   */
+  function _createERC20TokenContract(signer, address) {
+    if (!signer || !signer.provider) {
+      throw new Error('There is no signer or network provider!');
+    }
+  
+    return new ethers.Contract(address, ERC20_ABI, signer);
   }
 
   /**
@@ -50,8 +80,7 @@ function SpinWallet(wallet, encryptedJsonWallet) {
     this.wallet = this.wallet.connect(this.provider);
 
     // Add SPIN Token by default
-    // FIXME: Token information should be replaced with the correct ones
-    addToken.call(this, 'SPIN', '0x668D6D1a5be72dC477C630DE38aaEDc895e5019C', 18);
+    addToken.call(this, 'SPIN', SPIN_TOKEN_ADDRESS, 18);
   }
 
   /**
@@ -83,7 +112,7 @@ function SpinWallet(wallet, encryptedJsonWallet) {
    */
   async function unlock(password, cb) {
     let wallet = await Wallet.fromEncryptedJson(this.encryptedJsonWallet, password, cb);
-    initWallet.call(this, wallet);
+    _initWallet.call(this, wallet);
     return true;
   }
 
@@ -170,7 +199,7 @@ function SpinWallet(wallet, encryptedJsonWallet) {
       return;
     }
 
-    let contract = createERC20TokenContract(this.wallet, address);
+    let contract = _createERC20TokenContract(this.wallet, address);
     let oneToken = ethers.utils.bigNumberify('10').pow(decimals);
     this.tokens.push({
       symbol,
@@ -233,7 +262,7 @@ function SpinWallet(wallet, encryptedJsonWallet) {
       return Promise.reject(new Error('Invalid Ethereum address!'));
     }
 
-    let { average } = await NetworkStatsApi.getGasPriceStats();
+    let { average } = await NetworkStatsApi.getGasPriceStats(this.network);
 
     let value = ethers.utils.parseEther(amount);
     let tx = await this.wallet.sendTransaction({to, value, gasPrice: average});
@@ -263,7 +292,7 @@ function SpinWallet(wallet, encryptedJsonWallet) {
       return Promise.reject(new Error('Invalid Ethereum address!'));
     }
 
-    let { average } = await NetworkStatsApi.getGasPriceStats();
+    let { average } = await NetworkStatsApi.getGasPriceStats(this.network);
 
     amount = new ethers.utils.BigNumber(amount);
     amount = amount.mul(token.oneToken).toString(10);
@@ -320,14 +349,6 @@ function SpinWallet(wallet, encryptedJsonWallet) {
     sign: sign.bind(this),
     signMessage: signMessage.bind(this)
   });
-}
-
-function createERC20TokenContract(signer, address) {
-  if (!signer || !signer.provider) {
-    throw new Error('There is no signer or network provider!');
-  }
-
-  return new ethers.Contract(address, ERC20_ABI, signer);
 }
 
 /**

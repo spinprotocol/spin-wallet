@@ -1,3 +1,5 @@
+console.log('ENV', process.env);
+
 const Utils = require('ethers').utils;
 const SpinWalletApi = require('../temp/mockWallet');
 require('chai')
@@ -10,10 +12,16 @@ const expect = require('chai')
   .use(require('chai-as-promised'))
   .expect;
 
+if (!process.env.NETWORK
+  || process.env.NETWORK === 'mainnet'
+  || process.env.NETWORK === 'homestead') {
+  throw new Error('You are trying to run tests on main network which will cause you to lose real tokens/coins!!!');
+}
 
-const testnetMemonics = '<mnemonics for testnet>';  // Replace with your own testing account's mnemonics
+const testnetMemonics = process.env.MNEMONICS;
+const network = process.env.NETWORK || 'rinkeby'; // Ethereum-rinkeby by default
 const receiverAddress = '0xb38951160Db9FF7A33e3e901Fa53569B13525946'; // Feel free to change this address to any ethereum address you want
-const tokenAddress = '0x668D6D1a5be72dC477C630DE38aaEDc895e5019C';  // SPIN Token rinkeby deployment
+const tokenAddress = process.env.TOKEN_ADDRESS || '0x668D6D1a5be72dC477C630DE38aaEDc895e5019C';  // SPIN Token rinkeby deployment by default
 const sendEtherAmount = '0.001';
 const sendTokenAmount = '10';
 const password = '_test_';
@@ -157,18 +165,18 @@ describe('SpinWalletApiApi', () => {
     wallet.getPrivateKey().should.be.equal(privateKey);
   });
 
-  // These are real transactions on rinkeby testnet, therefore put your mnemonics to `testnetMemonics` variable to run these tests
-  // it('can send ether', async () => {
-  //   let wallet = SpinWalletApi.restoreWalletFromMnemonics(testnetMemonics);
-  //   wallet.connect('rinkeby');
-  //   let { status } = await wallet.sendEther(receiverAddress, sendEtherAmount).should.be.fulfilled;
-  //   status.should.be.equal(1);
-  // });
+  // These are real transactions on testnet
+  it('can send ether', async () => {
+    let wallet = SpinWalletApi.restoreWalletFromMnemonics(testnetMemonics);
+    wallet.connect(network);
+    let { status } = await wallet.sendEther(receiverAddress, sendEtherAmount).should.be.fulfilled;
+    status.should.be.equal(1);
+  });
 
-  // it('can send token', async () => {
-  //   let wallet = SpinWalletApi.restoreWalletFromMnemonics(testnetMemonics);
-  //   wallet.connect('rinkeby');
-  //   let { status } = await wallet.sendToken(tokenAddress, receiverAddress, sendTokenAmount).should.be.fulfilled;
-  //   status.should.be.equal(1);
-  // });
+  it('can send token', async () => {
+    let wallet = SpinWalletApi.restoreWalletFromMnemonics(testnetMemonics);
+    wallet.connect(network);
+    let { status } = await wallet.sendToken(tokenAddress, receiverAddress, sendTokenAmount).should.be.fulfilled;
+    status.should.be.equal(1);
+  });
 });
