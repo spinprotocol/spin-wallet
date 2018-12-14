@@ -1,5 +1,5 @@
 const Utils = require('ethers').utils;
-const SpinWalletApi = require('./mockWallet');
+const SpinWalletApi = require('../temp/mockWallet');
 require('chai')
   .use(require('chai-bignumber')(Utils.BigNumber))
   .use(require('chai-as-promised'))
@@ -157,18 +157,18 @@ describe('SpinWalletApiApi', () => {
     wallet.getPrivateKey().should.be.equal(privateKey);
   });
 
-  // These are real transactions on rinkeby testnet
-  it('can send ether', async () => {
-    let wallet = SpinWalletApi.restoreWalletFromMnemonics(testnetMemonics);
-    wallet.connect('rinkeby');
-    let { status } = await wallet.sendEther(receiverAddress, sendEtherAmount).should.be.fulfilled;
-    status.should.be.equal(1);
-  });
+  // These are real transactions on rinkeby testnet, therefore put your mnemonics to `testnetMemonics` variable to run these tests
+  // it('can send ether', async () => {
+  //   let wallet = SpinWalletApi.restoreWalletFromMnemonics(testnetMemonics);
+  //   wallet.connect('rinkeby');
+  //   let { status } = await wallet.sendEther(receiverAddress, sendEtherAmount).should.be.fulfilled;
+  //   status.should.be.equal(1);
+  // });
 
-  it('can send token', async () => {
-    let wallet = SpinWalletApi.restoreWalletFromMnemonics(testnetMemonics);
-    wallet.connect('rinkeby');
-    let { status } = await wallet.sendToken(tokenAddress, receiverAddress, sendTokenAmount).should.be.fulfilled;
-    status.should.be.equal(1);
-  });
+  // it('can send token', async () => {
+  //   let wallet = SpinWalletApi.restoreWalletFromMnemonics(testnetMemonics);
+  //   wallet.connect('rinkeby');
+  //   let { status } = await wallet.sendToken(tokenAddress, receiverAddress, sendTokenAmount).should.be.fulfilled;
+  //   status.should.be.equal(1);
+  // });
 });

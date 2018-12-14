@@ -13,7 +13,7 @@ gulp.task('mock-wallet', function() {
   let src = './index.js';
   let dest = './test';
   let fileReplacement = './test/mockedLocalForage.js';
-  let replacedFile = 'mockWallet.js'
+  let replacedFile = '../temp/mockWallet.js'
 
   let search1 = 'const localforage = require(\'localforage\');';
   let replacement1 = fs.readFileSync(fileReplacement).toString();

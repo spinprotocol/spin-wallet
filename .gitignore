@@ -4,5 +4,8 @@ dist/
 # Node modules
 node_modules/
 
+# temporary files
+temp/
+
 #macOS files
 .DS_Store
