@@ -1,6 +1,7 @@
 const gulp = require('gulp');
 const rename = require('gulp-rename');
 const replace = require('gulp-replace');
+const uglify = require('gulp-uglify');
 const fs = require('fs');
 
 
@@ -24,5 +25,20 @@ gulp.task('mock-wallet', function() {
     .pipe(replace(search1, replacement1))
     .pipe(replace(search2, replacement2))
     .pipe(rename(replacedFile))
+    .pipe(uglify())
+    .pipe(gulp.dest(dest));
+});
+
+
+/**
+ * Uglify and minify the distribution file
+ */
+gulp.task('minifier', function() {
+  let src = './dist/bundle.js';
+  let dest = './dist';
+
+  return gulp.src(src)
+    .pipe(uglify())
+    .pipe(rename('./bundle.min.js'))
     .pipe(gulp.dest(dest));
 });

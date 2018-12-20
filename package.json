@@ -4,7 +4,8 @@
   "description": "Wallet module for spin-protocol projects",
   "main": "index.js",
   "scripts": {
-    "dist": "npm run build && jsmin -o dist/bundle.min.js dist/bundle.js",
+    "dist": "npm run build && gulp minifier",
+    "build-demo": "browserify demo/index.js -t [ envify --NETWORK aspen ] -t babelify -o dist/demo_bundle.js -v",
     "build": "browserify ./index.js -t [ envify --NETWORK aspen ] -t babelify -o dist/bundle.js -v",
     "test": "gulp mock-wallet && mocha ./test/wallet.test.js --timeout 60000"
   },
@@ -35,6 +36,7 @@
     "gulp": "^3.9.1",
     "gulp-rename": "^1.4.0",
     "gulp-replace": "^1.0.0",
+    "gulp-uglify": "^3.0.1",
     "mocha": "^5.2.0"
   }
 }
