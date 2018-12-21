@@ -16,7 +16,7 @@ $ npm install
 # Install ethers module
 # 1. Clone sub-project to your local git clone 
 # 2. And install ethers npm module locally 
-$ git clone  https://github.com/spinprotocol/ethers.js.git
+$ git clone https://github.com/spinprotocol/ethers.js.git
 $ npm link <path_to_sub_project/ethers.js>
 
 # Install browserify
@@ -67,7 +67,7 @@ For module use, simply import/require `dist/spin.js`
    * Creates BIP44 compliant HD wallet.
    * @returns {SpinWallet}
    */
-  function createWallet()
+  function createWallet() {}
 
   /**
    * Restores BIP44 compliant HD wallet from 12-word mnemonic sentence (BIP39).
@@ -75,7 +75,7 @@ For module use, simply import/require `dist/spin.js`
    * @param {string} mnemonics 12-word mnemonic sentence
    * @returns {SpinWallet}
    */
-  function restoreWalletFromMnemonics(mnemonics)
+  function restoreWalletFromMnemonics(mnemonics) {}
 
   /**
    * Restores BIP44 compliant HD wallet from private key.
@@ -83,7 +83,7 @@ For module use, simply import/require `dist/spin.js`
    * @param {string} privateKey Private key in the form of hex string (32-byte)
    * @returns {SpinWallet}
    */
-  function restoreWalletFromPrivateKey(privateKey)
+  function restoreWalletFromPrivateKey(privateKey) {}
 
   /**
    * Restores BIP44 compliant HD wallet from encrypted json wallet.
@@ -94,7 +94,7 @@ For module use, simply import/require `dist/spin.js`
    * @param {function} [cb] Callback function called with the progress ratio in every second
    * @returns {SpinWallet}
    */
-  async function restoreWalletFromVault(vault, password, cb)
+  async function restoreWalletFromVault(vault, password, cb) {}
 
   /**
    * Saves the encrypted wallet to the browser's storage.
@@ -103,17 +103,17 @@ For module use, simply import/require `dist/spin.js`
    * 
    * @param {string} encryptedJsonWallet 
    */
-  function saveVault(encryptedJsonWallet)
+  function saveVault(encryptedJsonWallet) {}
 
   /**
    * @returns {Promise<string>} Resolves with the vault retrieved from the browser's storage
    */
-  function retrieveVault()
+  function retrieveVault() {}
 
   /**
    * Clears the vault saved in the Browser's storage
    */
-  function clearVault()
+  function clearVault() {}
 
 
   /**
