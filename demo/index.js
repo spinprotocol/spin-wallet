@@ -1,6 +1,3 @@
-
-const spin = require('../index');
-
 function query(el, selector) {
   if (!selector) {
       selector = el;

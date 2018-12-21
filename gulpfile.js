@@ -25,7 +25,6 @@ gulp.task('mock-wallet', function() {
     .pipe(replace(search1, replacement1))
     .pipe(replace(search2, replacement2))
     .pipe(rename(replacedFile))
-    .pipe(uglify())
     .pipe(gulp.dest(dest));
 });
 
@@ -34,11 +33,11 @@ gulp.task('mock-wallet', function() {
  * Uglify and minify the distribution file
  */
 gulp.task('minifier', function() {
-  let src = './dist/bundle.js';
+  let src = './dist/spin.js';
   let dest = './dist';
 
   return gulp.src(src)
     .pipe(uglify())
-    .pipe(rename('./bundle.min.js'))
+    .pipe(rename('./spin.min.js'))
     .pipe(gulp.dest(dest));
 });

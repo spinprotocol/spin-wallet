@@ -1,5 +1,3 @@
-console.log('ENV', process.env);
-
 const Utils = require('ethers').utils;
 const SpinWalletApi = require('../temp/mockWallet');
 require('chai')

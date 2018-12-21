@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dist": "npm run build && gulp minifier",
-    "build-demo": "browserify demo/index.js -t [ envify --NETWORK aspen ] -t babelify -o dist/demo_bundle.js -v",
-    "build": "browserify ./index.js -t [ envify --NETWORK aspen ] -t babelify -o dist/bundle.js -v",
+    "build": "browserify --standalone spin ./index.js -t [ envify --NETWORK aspen ] -t babelify -o dist/spin.js -v",
     "test": "gulp mock-wallet && mocha ./test/wallet.test.js --timeout 60000"
   },
   "author": "",
@@ -14,9 +13,6 @@
   "dependencies": {
     "@babel/runtime": "^7.2.0",
     "axios": "^0.18.0",
-    "browser-passworder": "^2.0.3",
-    "eth-keyring-controller": "^3.3.1",
-    "ethers": "^4.0.15",
     "localforage": "^1.7.3",
     "lodash.find": "^4.6.0",
     "lodash.memoize": "^4.1.2",
