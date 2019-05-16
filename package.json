@@ -13,6 +13,9 @@
   "dependencies": {
     "@babel/runtime": "^7.2.0",
     "axios": "^0.18.0",
+    "caver-js": "0.0.3-d",
+    "date-fns": "^1.30.1",
+    "ffp-js": "0.0.8",
     "localforage": "^1.7.3",
     "lodash.find": "^4.6.0",
     "lodash.memoize": "^4.1.2",

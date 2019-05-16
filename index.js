@@ -5,6 +5,9 @@ const localforage = require('localforage');
 const Wallet = ethers.Wallet;
 const NetworkStatsApi = require('./api/networkStatsApi');
 const VAULT_NAME = '__spin_vault__';
+const { filter, go, map, log } = require('ffp-js');
+const format = require('date-fns/format');
+
 
 
 function SpinWallet(wallet, encryptedJsonWallet) {
@@ -22,12 +25,7 @@ function SpinWallet(wallet, encryptedJsonWallet) {
     'event Transfer(address indexed from, address indexed to, uint256 amount)'
   ];
 
-  /**
-   * @private
-   */
-  const SPIN_TOKEN_ADDRESS = process.env.TOKEN_ADDRESS;
-
-  /**
+  /**getTokenBalance
    * @private
    */
   this.wallet = null;
@@ -78,9 +76,6 @@ function SpinWallet(wallet, encryptedJsonWallet) {
     this.provider = ethers.getDefaultProvider(network);
     this.network = network;
     this.wallet = this.wallet.connect(this.provider);
-
-    // Add SPIN Token by default
-    addToken.call(this, 'SPIN', SPIN_TOKEN_ADDRESS, 18);
   }
 
   /**
@@ -240,11 +235,9 @@ function SpinWallet(wallet, encryptedJsonWallet) {
     if (!token) {
       return Promise.reject(new Error('Token does not exist!'));
     }
-
     let balance = await token.contract.balanceOf(this.wallet.address);
-    return balance.div(token.oneToken);
+    return balance.div(token.oneToken).toNumber();
   }
-
   /**
    * @param {string} to 
    * @param {string|number} amount 
@@ -330,6 +323,10 @@ function SpinWallet(wallet, encryptedJsonWallet) {
     return this.wallet.signMessage(message);
   }
 
+  function getTokens() {
+    return this.tokens;
+  }
+
   return Object.freeze({
     connect: connect.bind(this),
     lock: lock.bind(this),
@@ -347,7 +344,8 @@ function SpinWallet(wallet, encryptedJsonWallet) {
     sendEther: sendEther.bind(this),
     sendToken: sendToken.bind(this),
     sign: sign.bind(this),
-    signMessage: signMessage.bind(this)
+    signMessage: signMessage.bind(this),
+    getTokens: getTokens.bind(this),
   });
 }
 
@@ -393,6 +391,28 @@ async function restoreWalletFromVault(vault, password, cb) {
   return new SpinWallet(wallet, vault);
 }
 
+
+async function getAddressHistory(network, address, start = 0, end = 'latest') {
+  const etherScanProvider = new ethers.providers.EtherscanProvider(network);
+  return go(
+      etherScanProvider.getHistory(address, start, end),
+      a => {
+        return a.filter((history, index) => {
+          return index === a.findIndex(obj => {
+            return JSON.stringify(obj) === JSON.stringify(history)
+          })
+        })
+      },
+      map(b => {
+        const value = ethers.utils.formatEther(b.value)
+        const date = format(new Date(b.timestamp * 1000), 'YYYY-MM-DD')
+        const state = (b.from === address && b.to === address) ? 'SELF' : ((b.from === address) ? 'OUT' : 'IN')
+        return { state, from: b.from, to: b.to, value, date}
+      }),
+      c => c.reverse()
+  )
+}
+
 /**
  * Clears the vault saved in the Browser's storage
  */
@@ -426,5 +446,6 @@ module.exports = {
   restoreWalletFromVault,
   saveVault,
   retrieveVault,
-  clearVault
+  clearVault,
+  getAddressHistory
 };
