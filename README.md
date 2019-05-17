@@ -96,6 +96,16 @@ For module use, simply import/require `dist/spin.js`
    */
   async function restoreWalletFromVault(vault, password, cb) {}
 
+ /**
+  * 
+  * @param network
+  * @param address
+  * @param start
+  * @param end
+  * @returns {Promise<void>} array of Transaction Responses for each transaction to or from addressOrName between startBlock and endBlock
+  */
+  async function getAddressHistory(network, address, start = 0 , end = 'lastest') {}
+  
   /**
    * Saves the encrypted wallet to the browser's storage.
    * @see https://localforage.github.io/localForage/#settings-api-setdriver
@@ -228,4 +238,9 @@ For module use, simply import/require `dist/spin.js`
    * @returns {Promise<string>} Resolves with the message signature
    */
   SpinWallet.signMessage(message)
+  
+ /**
+  * @returns Token Lists 
+  */
+  SpinWallet.getTokens()
 ```
