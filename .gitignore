@@ -1,11 +1,2 @@
-# Generated files
-dist/
-
-# Node modules
+.idea/
 node_modules/
-
-# temporary files
-temp/
-
-#macOS files
-.DS_Store
