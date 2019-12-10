@@ -1,18 +1,20 @@
-# spin-wallet
-Wallet API for SPIN Protocol projects
+# Caver-js
 
-## Configuration
+> caver-js is a Javascript API library that allows developers to interact with a Klaytn node using a HTTP or Websocket connection.
 
-* Branch
-  * Etheruem
-  * Klaytn/caver-js
-  * Klaytn/generic-caver
-  * Klyatn/pkms
+### Installation
 
+```
+# install dependencies
+npm install
+```
 
+### Test
 
-## Additional Resources
+```
+# jest unit testing
+npm run test
+```
 
-* [ethers.js](https://docs.ethers.io/ethers.js/html/)  
-* [caver.js](https://docs.klaytn.com/bapp/sdk/caver-js)
-* [generic-caver](https://www.npmjs.com/package/generic-caver)  
+### Ref
+[caver-js](https://docs.klaytn.com/bapp/sdk/caver-js)

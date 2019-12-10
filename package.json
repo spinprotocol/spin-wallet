@@ -1,0 +1,19 @@
+{
+  "name": "spin-wallet",
+  "version": "1.0.0",
+  "description": "Private Key Management System",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest ./test/*.spec.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "caver-js": "^1.2.1",
+    "ffp-js": "0.0.21"
+  },
+  "devDependencies": {
+    "jest": "^24.9.0"
+  }
+}
